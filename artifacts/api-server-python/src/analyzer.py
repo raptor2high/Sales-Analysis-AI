@@ -285,7 +285,10 @@ def analyze(rows: List[SalesRow]) -> AnalysisResult:
 
     last_week = week_data[-1] if wlen else avg_order_value * 10
     next_week = max(0.0, last_week + slope)
-    next_month = max(0.0, next_week * 4 + slope * 10)
+    # Sum horizons 1..4 from the same baseline. Applying the slope to
+    # next_week again double-counts the first step; clamping only the total
+    # also lets negative later weeks cancel valid earlier revenue.
+    next_month = sum(max(0.0, last_week + slope * horizon) for horizon in range(1, 5))
     trend = "Upward trend" if slope > 0 else "Declining trend" if slope < 0 else "Stable"
 
     # ── Insights ─────────────────────────────────────────────────────────
