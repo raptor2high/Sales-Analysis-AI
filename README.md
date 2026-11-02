@@ -66,7 +66,7 @@ Or download the sample CSV from the landing page.
 - **AI Insights** — Automated trend detection, anomaly alerts, underperformance warnings
 - **Recommendations** — Actionable business suggestions based on data patterns
 - **Forecasting** — Next-week and next-month revenue projections
-- **AI Chat** — Ask natural-language questions about your data (powered by Groq/Llama 3.3)
+- **AI Chat** — Ask natural-language questions about your data (powered by Groq)
 
 ## AI Chat Setup (Optional)
 
@@ -90,7 +90,7 @@ cp .env.example .env
 
 - **Frontend**: Vanilla HTML/CSS/JS, Chart.js, Tailwind (CDN), Font Awesome
 - **Backend**: Python 3.8+, Flask, Flask-CORS
-- **AI**: Groq API (Llama 3.3 70B) via OpenAI-compatible client
+- **AI**: Groq API (GPT-OSS 20B) via OpenAI-compatible client
 - **Dev Server**: Vite (proxy + hot reload)
 
 ## Environment Variables
@@ -101,6 +101,7 @@ cp .env.example .env
 | `APP_ENV` | `development` | `production` disables debug mode |
 | `LOG_LEVEL` | `INFO` | Logging verbosity |
 | `GROQ_API_KEY` | — | Required for AI chat feature |
+| `GROQ_MODEL` | `openai/gpt-oss-20b` | Groq chat model |
 
 ## License
 

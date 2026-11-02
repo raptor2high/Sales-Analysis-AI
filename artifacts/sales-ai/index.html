@@ -1267,18 +1267,29 @@
     }
 
     // ── Chat ──────────────────────────────────────────────────────────────────────
+    let chatHistory = [];
+    let chatController = null;
+
     function initChat(data) {
+      if (chatController) chatController.abort();
+      chatController = null;
+      chatHistory = [];
+      const messages = document.getElementById('chatMessages');
+      messages.replaceChildren();
+      const intro = document.createElement('div');
+      intro.id = 'chatIntro';
+      intro.className = 'chat-bubble ai';
+      messages.appendChild(intro);
       const k = data.kpis;
       const orders = k.totalOrders.toLocaleString();
       const revenue = fmtCurrency(k.totalRevenue);
       const product = k.topProduct || 'N/A';
-      const intro = document.getElementById('chatIntro');
       if (intro) {
-        intro.innerHTML = `I've analyzed <strong>${orders}</strong> orders totalling <strong>${revenue}</strong>. Your top product is <strong>"${product}"</strong>. Ask me anything about your data.`;
+        intro.textContent = `I've analyzed ${orders} orders totalling ${revenue}. Your top product is "${product}". Ask me anything about your data.`;
       }
       const input = document.getElementById('chatInput');
       const btn = document.getElementById('chatSendBtn');
-      if (input) { input.disabled = false; input.addEventListener('keydown', e => { if (e.key === 'Enter') handleChatSend(); }); }
+      if (input) { input.disabled = false; input.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); handleChatSend(); } }; }
       if (btn) btn.disabled = false;
     }
 
@@ -1287,7 +1298,7 @@
       if (!box) return;
       const div = document.createElement('div');
       div.className = 'chat-bubble ' + role;
-      div.innerHTML = text;
+      div.textContent = text;
       box.appendChild(div);
       box.scrollTop = box.scrollHeight;
       return div;
@@ -1307,13 +1318,16 @@
     async function handleChatSend() {
       const input = document.getElementById('chatInput');
       const btn = document.getElementById('chatSendBtn');
-      if (!input || !analysisResult) return;
+      if (!input || !analysisResult || chatController) return;
       const msg = input.value.trim();
       if (!msg) return;
       input.value = '';
       input.disabled = true;
       btn.disabled = true;
 
+      const controller = new AbortController();
+      chatController = controller;
+      const timeout = setTimeout(() => controller.abort(), 45000);
       appendBubble('user', msg);
       const typing = showTyping();
 
@@ -1321,19 +1335,27 @@
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg, context: analysisResult })
+          signal: controller.signal,
+          body: JSON.stringify({ message: msg, context: analysisResult, history: chatHistory })
         });
         const json = await res.json();
+        if (chatController !== controller) return;
         if (typing) typing.remove();
-        if (json.reply) {
+        if (res.ok && json.reply) {
+          chatHistory.push({ role: 'user', content: msg }, { role: 'assistant', content: json.reply });
+          chatHistory = chatHistory.slice(-12);
           appendBubble('ai', json.reply);
         } else {
           appendBubble('ai', json.error || 'Something went wrong.');
         }
       } catch (err) {
         if (typing) typing.remove();
-        appendBubble('ai', 'Could not reach the server. Please try again.');
+        if (chatController !== controller) return;
+        appendBubble('ai', err.name === 'AbortError' ? 'The response timed out. Please try again.' : 'Could not reach the server. Please try again.');
       } finally {
+        clearTimeout(timeout);
+        if (chatController !== controller) return;
+        chatController = null;
         input.disabled = false;
         btn.disabled = false;
         input.focus();
