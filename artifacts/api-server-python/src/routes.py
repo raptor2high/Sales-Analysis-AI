@@ -2,6 +2,8 @@
 
 import os
 import json
+import csv
+import io
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 
@@ -55,23 +57,14 @@ def analyze_endpoint():
         if not filename or not filename.lower().endswith('.csv'):
             return jsonify({"error": "Invalid file type. Please upload a .csv file."}), 400
 
-        file_content = file.read().decode('utf-8')
-        if not file_content.strip():
+        # Iterate CSV dictionaries directly rather than retaining a second row list.
+        stream = io.TextIOWrapper(file.stream, encoding='utf-8-sig', newline='')
+        raw_rows = csv.DictReader(stream, skipinitialspace=True)
+        headers = raw_rows.fieldnames
+        if not headers:
             return jsonify({"error": "The uploaded file is empty."}), 400
 
-        # --- CSV parsing ---
-        import csv, io
-        try:
-            raw_rows = list(csv.DictReader(io.StringIO(file_content), skipinitialspace=True))
-        except Exception as e:
-            logger.error(f"CSV parsing error: {e}")
-            return jsonify({"error": "Failed to parse CSV file. Please check the format."}), 400
-
-        if not raw_rows:
-            return jsonify({"error": "The CSV file has no data rows."}), 400
-
         # --- Column validation ---
-        headers = list(raw_rows[0].keys())
         missing = validate_columns(headers)
         if missing:
             return jsonify({
@@ -108,6 +101,10 @@ def analyze_endpoint():
             "rowCount": len(rows),
         })
 
+    except UnicodeDecodeError:
+        return jsonify({"error": "Please upload a UTF-8 encoded CSV file."}), 400
+    except csv.Error:
+        return jsonify({"error": "Failed to parse CSV file. Please check the format."}), 400
     except Exception as e:
         logger.error(f"Analysis error: {e}", exc_info=True)
         return jsonify({"error": "Something went wrong during analysis. Please try again."}), 500

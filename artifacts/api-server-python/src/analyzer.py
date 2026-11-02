@@ -4,10 +4,11 @@ Parses CSV rows into typed dataclasses, computes KPIs, chart data,
 insights, recommendations, and a simple linear forecast.
 """
 
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Iterable
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from collections import defaultdict
+from math import isfinite
 
 
 # ── Data Models ──────────────────────────────────────────────────────────────
@@ -84,8 +85,11 @@ def _parse_number(value: str, *, integer: bool = False) -> Optional[float]:
     """Strip non-numeric chars and convert. Returns None on failure."""
     try:
         cleaned = ''.join(c for c in value if c.isdigit() or c in '.-')
-        return int(float(cleaned)) if integer else float(cleaned)
-    except (ValueError, IndexError):
+        number = float(cleaned)
+        if not isfinite(number):
+            return None
+        return int(number) if integer else number
+    except (ValueError, OverflowError, IndexError):
         return None
 
 
@@ -147,12 +151,17 @@ def validate_columns(headers: List[str]) -> List[str]:
     return sorted(required - present)
 
 
-def parse_rows(raw_rows: List[Dict[str, str]]) -> Tuple[List[SalesRow], List[str]]:
+def parse_rows(raw_rows: Iterable[Dict[str, str]]) -> Tuple[List[SalesRow], List[str]]:
     """Parse raw CSV dicts into SalesRow objects. Returns (rows, warnings)."""
     rows: List[SalesRow] = []
     warnings: List[str] = []
 
+    # Per-upload bounded cache: repeated dates need parsing only once.
+    date_cache = {}
     for i, raw in enumerate(raw_rows, start=2):
+        if None in raw:
+            warnings.append(f"Row {i}: extra CSV fields, skipped")
+            continue
         # Normalise keys once
         cols = {k.strip().lower(): (v.strip() if v else "") for k, v in raw.items()}
 
@@ -167,7 +176,12 @@ def parse_rows(raw_rows: List[Dict[str, str]]) -> Tuple[List[SalesRow], List[str
             continue
 
         # Date
-        date = _parse_date(date_s)
+        if date_s in date_cache:
+            date = date_cache[date_s]
+        else:
+            date = _parse_date(date_s)
+            if len(date_cache) < 4096:
+                date_cache[date_s] = date
         if date is None:
             warnings.append(f'Row {i}: invalid date "{date_s}", skipped')
             continue
@@ -233,8 +247,8 @@ def analyze(rows: List[SalesRow]) -> AnalysisResult:
 
     # ── Growth rate (last 25 % vs previous 25 %) ────────────────────────
     quarter = max(1, n // 4)
-    recent_rev = sum(r.revenue for r in rows[-quarter:])
-    prev_rev = sum(r.revenue for r in rows[-quarter * 2 : -quarter])
+    recent_rev = sum(rows[i].revenue for i in range(n - quarter, n))
+    prev_rev = sum(rows[i].revenue for i in range(max(0, n - quarter * 2), n - quarter))
     growth_rate = ((recent_rev - prev_rev) / prev_rev * 100) if prev_rev > 0 else 0.0
 
     # ── Sorted breakdowns ────────────────────────────────────────────────
@@ -253,8 +267,7 @@ def analyze(rows: List[SalesRow]) -> AnalysisResult:
     )
 
     # ── Anomaly detection ────────────────────────────────────────────────
-    day_values = list(by_day.values())
-    avg_day = sum(day_values) / len(day_values) if day_values else 0.0
+    avg_day = sum(by_day.values()) / len(by_day) if by_day else 0.0
     anomaly_label: Optional[str] = None
     for d, v in by_day.items():
         if v > avg_day * 2.5:

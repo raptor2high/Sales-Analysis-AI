@@ -1,0 +1,133 @@
+{
+  "kpis": {
+    "totalRevenue": 94080.0,
+    "totalOrders": 43,
+    "growthRate": -54.21450574068888,
+    "avgOrderValue": 2187.906976744186,
+    "topProduct": "ProMax Suite",
+    "topRegion": "East"
+  },
+  "charts": {
+    "salesOverTime": {
+      "labels": [
+        "Dec 31",
+        "Jan 07",
+        "Jan 14",
+        "Jan 21",
+        "Jan 28",
+        "Feb 04",
+        "Feb 11",
+        "Feb 18",
+        "Feb 25",
+        "Mar 03",
+        "Mar 10",
+        "Mar 17",
+        "Mar 24",
+        "Mar 31",
+        "Apr 07",
+        "Apr 14",
+        "Apr 21"
+      ],
+      "data": [
+        5660.0,
+        2580.0,
+        5070.0,
+        5910.0,
+        2680.0,
+        6420.0,
+        3860.0,
+        3340.0,
+        6500.0,
+        8580.0,
+        15120.0,
+        4710.0,
+        7300.0,
+        6790.0,
+        930.0,
+        5400.0,
+        3230.0
+      ]
+    },
+    "revenueByProduct": {
+      "labels": [
+        "ProMax Suite",
+        "Enterprise Tier",
+        "Starter Plan",
+        "Add-ons"
+      ],
+      "data": [
+        46920.0,
+        38150.0,
+        6620.0,
+        2390.0
+      ]
+    },
+    "revenueByRegion": {
+      "labels": [
+        "East",
+        "North",
+        "Central",
+        "South",
+        "West"
+      ],
+      "data": [
+        38150.0,
+        25290.0,
+        11170.0,
+        10120.0,
+        9350.0
+      ]
+    }
+  },
+  "insights": [
+    {
+      "type": "warn",
+      "text": "Revenue dropped 54.2% recently — may signal seasonal dip or competitive pressure."
+    },
+    {
+      "type": "good",
+      "text": "\"ProMax Suite\" is your top product, contributing 50% of total revenue."
+    },
+    {
+      "type": "warn",
+      "text": "West region is underperforming by 50% below the regional average."
+    },
+    {
+      "type": "good",
+      "text": "Average order value is $2.2K across 43 orders."
+    },
+    {
+      "type": "warn",
+      "text": "Anomaly detected: Unusual spike on Mar 12 — 4.2x above average"
+    },
+    {
+      "type": "warn",
+      "text": "\"Add-ons\" contributes only 2.5% of revenue — consider reviewing its positioning."
+    }
+  ],
+  "recommendations": [
+    {
+      "icon": "bullseye",
+      "text": "Increase marketing budget for \"ProMax Suite\" — it drives 50% of your revenue with the highest ROI."
+    },
+    {
+      "icon": "magnifying-glass",
+      "text": "Investigate \"West\" region — assign a dedicated rep or run a targeted campaign to close the 50% performance gap."
+    },
+    {
+      "icon": "chart-line",
+      "text": "Revenue is declining — consider running promotions or discounts to re-engage customers and reverse the trend."
+    },
+    {
+      "icon": "user-tie",
+      "text": "Bundle \"ProMax Suite\" with lower-performing products to lift overall average order value."
+    }
+  ],
+  "forecast": {
+    "nextWeek": 2043.3333333333333,
+    "nextMonth": 0.0,
+    "growthTrend": "Declining trend",
+    "anomaly": "Unusual spike on Mar 12 — 4.2x above average"
+  },
+  "summary": "Analysis of 43 orders totalling $94.1K. Declining at 54.2% with \"ProMax Suite\" leading."
+}

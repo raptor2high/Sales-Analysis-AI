@@ -11,7 +11,7 @@ pip install -r requirements.txt
 ## Development
 
 ```bash
-python src/index.py
+python src/app.py
 ```
 
 Server will run on `http://localhost:3001`
@@ -50,7 +50,7 @@ file: <CSV file>
 - **src/routes.py** - API route handlers
 - **src/analyzer.py** - Core sales analysis logic
 - **src/logger.py** - Logging configuration
-- **src/index.py** - Application entry point
+- **src/app.py** - Application entry point
 
 ## Features
 
