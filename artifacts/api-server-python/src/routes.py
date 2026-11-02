@@ -80,14 +80,18 @@ def analyze_endpoint():
         # --- Row parsing ---
         rows, warnings = parse_rows(raw_rows)
         if not rows:
+            hint = f"Detail: {warnings[0]}" if warnings else "Supported date formats include YYYY-MM-DD, DD-MM-YYYY, DD/MM/YYYY."
             return jsonify({
                 "error": "No valid data rows found after cleaning. Check your file for invalid dates or numbers.",
+                "hint": hint,
                 "warnings": warnings,
             }), 400
 
         if len(rows) < 5:
+            hint = f"Detail: {warnings[0]}" if warnings else "Upload at least 5 rows with date, product, revenue, quantity, region."
             return jsonify({
                 "error": f"Dataset too small — only {len(rows)} valid row(s) found. Please upload at least 5 rows for meaningful analysis.",
+                "hint": hint,
                 "warnings": warnings,
             }), 400
 

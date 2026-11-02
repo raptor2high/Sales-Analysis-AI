@@ -84,9 +84,60 @@ def _parse_number(value: str, *, integer: bool = False) -> Optional[float]:
     """Strip non-numeric chars and convert. Returns None on failure."""
     try:
         cleaned = ''.join(c for c in value if c.isdigit() or c in '.-')
-        return float(int(cleaned)) if integer else float(cleaned)
+        return int(float(cleaned)) if integer else float(cleaned)
     except (ValueError, IndexError):
         return None
+
+
+def _parse_date(value: str) -> Optional[datetime]:
+    """Parse various date formats into a datetime object. Returns None on failure."""
+    if not value or not isinstance(value, str):
+        return None
+
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+
+    # Handle optional time component
+    date_part = cleaned.split("T")[0].split(" ")[0].strip()
+
+    # Try ISO format first (standard YYYY-MM-DD)
+    try:
+        return datetime.fromisoformat(date_part)
+    except (ValueError, TypeError):
+        pass
+
+    # Common formats to try (DD-MM-YYYY, DD/MM/YYYY, MM-DD-YYYY, etc.)
+    formats = [
+        "%d-%m-%Y",
+        "%d/%m/%Y",
+        "%Y-%m-%d",
+        "%Y/%m/%d",
+        "%m-%d-%Y",
+        "%m/%d/%Y",
+        "%d.%m.%Y",
+        "%m.%d.%Y",
+        "%Y.%m.%d",
+        "%b %d, %Y",
+        "%B %d, %Y",
+        "%d %b %Y",
+        "%d %B %Y",
+        "%Y-%m-%d %H:%M:%S",
+        "%d-%m-%Y %H:%M:%S",
+        "%m-%d-%Y %H:%M:%S",
+        "%d/%m/%Y %H:%M:%S",
+        "%m/%d/%Y %H:%M:%S",
+        "%Y/%m/%d %H:%M:%S",
+    ]
+
+    for candidate in (date_part, cleaned):
+        for fmt in formats:
+            try:
+                return datetime.strptime(candidate, fmt)
+            except (ValueError, TypeError):
+                continue
+
+    return None
 
 
 def validate_columns(headers: List[str]) -> List[str]:
@@ -116,9 +167,8 @@ def parse_rows(raw_rows: List[Dict[str, str]]) -> Tuple[List[SalesRow], List[str
             continue
 
         # Date
-        try:
-            date = datetime.fromisoformat(date_s.split("T")[0])
-        except (ValueError, IndexError):
+        date = _parse_date(date_s)
+        if date is None:
             warnings.append(f'Row {i}: invalid date "{date_s}", skipped')
             continue
 
