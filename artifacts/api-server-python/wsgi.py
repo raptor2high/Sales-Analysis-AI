@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-"""Production WSGI entry point for the Flask application."""
+"""Production WSGI entry point for the Django application."""
 import os
-from src.app import create_app
 
-app = create_app()
+from django.core.wsgi import get_wsgi_application
 
-if __name__ == "__main__":
-    port = int(os.getenv('PORT', 3001))
-    app.run(host='0.0.0.0', port=port, debug=False)
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'src.settings')
+application = get_wsgi_application()
+app = application  # Keep existing Gunicorn commands using wsgi:app working.

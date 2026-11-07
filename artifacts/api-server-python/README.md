@@ -1,68 +1,39 @@
-# Python API Server Backend
+# Django API server
 
-A Flask-based Python backend for the Sales Analysis AI application.
-
-## Installation
+Run these commands from `artifacts/api-server-python` with Python 3.10–3.14.
 
 ```bash
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+python manage.py runserver 0.0.0.0:3001
 ```
 
-## Development
+Django serves the dashboard at `http://localhost:3001`. The Vite development server also works with this backend on port 3001. The app keeps its state in the browser and has no database setup or migrations.
+
+For optional AI chat, copy `.env.example` to `.env` and set `GROQ_API_KEY`. Set `APP_ENV=development` to enable local debug pages.
+
+## API
+
+| Method | Path | Request |
+|--------|------|---------|
+| GET | `/api/healthz` | Health check |
+| POST | `/api/analyze` | Multipart field `file` containing a CSV with date, product, revenue, quantity, and region columns |
+| POST | `/api/chat` | JSON with `message`, analysis `context`, and optional conversation `history` |
+
+## Production
+
+Set `APP_ENV=production`, provide a stable `DJANGO_SECRET_KEY`, and set `DJANGO_ALLOWED_HOSTS` to a comma-separated list of deployment hostnames. Loopback and the hostname supplied by Render in `RENDER_EXTERNAL_HOSTNAME` are included automatically.
+
+Run Gunicorn from this directory on the production host.
 
 ```bash
-python src/app.py
+gunicorn --bind "0.0.0.0:${PORT:-3001}" wsgi:application
 ```
 
-Server will run on `http://localhost:3001`
+Existing Gunicorn commands targeting `wsgi:app` are also supported. Deploy the sibling `sales-ai` directory alongside the backend so the dashboard and sample CSV remain available.
 
-## Environment Variables
+## Tests
 
-- `PORT` (default: 3001) - Server port
-- `NODE_ENV` (default: development) - Set to "production" for production mode
-- `LOG_LEVEL` (default: INFO) - Logging level (DEBUG, INFO, WARNING, ERROR)
-
-## API Endpoints
-
-### Health Check
+```bash
+python manage.py check
+python manage.py test
 ```
-GET /api/healthz
-```
-
-### Analyze Sales Data
-```
-POST /api/analyze
-Content-Type: multipart/form-data
-
-file: <CSV file>
-```
-
-**Required CSV columns:**
-- date
-- product
-- revenue
-- quantity
-- region
-
-## Architecture
-
-- **src/app.py** - Flask application factory and configuration
-- **src/routes.py** - API route handlers
-- **src/analyzer.py** - Core sales analysis logic
-- **src/logger.py** - Logging configuration
-- **src/app.py** - Application entry point
-
-## Features
-
-- CSV file upload and validation
-- Comprehensive sales data analysis
-- KPI calculation
-- Chart data generation
-- Anomaly detection
-- Revenue forecasting
-- Automated insights and recommendations
-- Full CORS support
-
-## Notes
-
-This is a direct port from the TypeScript Express backend to Python Flask, maintaining 100% functional parity with the original implementation.

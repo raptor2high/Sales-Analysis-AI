@@ -15,13 +15,15 @@ Sales-Analysis-AI/
 │   │   ├── vite.config.ts      # Dev server + API proxy
 │   │   └── package.json
 │   │
-│   └── api-server-python/      # Backend (Python / Flask)
+│   └── api-server-python/      # Backend (Python / Django)
 │       ├── src/
-│       │   ├── app.py          # Flask application factory
-│       │   ├── routes.py       # API route handlers
+│       │   ├── settings.py     # Django settings
+│       │   ├── urls.py         # API and dashboard URLs
+│       │   ├── routes.py       # API views
 │       │   ├── analyzer.py     # Sales analysis engine
 │       │   └── logger.py       # Logging configuration
-│       ├── wsgi.py             # Production entry point
+│       ├── manage.py           # Development and test commands
+│       ├── wsgi.py             # Production WSGI entry point
 │       ├── requirements.txt
 │       └── .env.example
 │
@@ -35,8 +37,8 @@ Sales-Analysis-AI/
 
 ```bash
 cd artifacts/api-server-python
-pip install -r requirements.txt
-python src/app.py
+python -m pip install -r requirements.txt
+python manage.py runserver 0.0.0.0:3001
 # → Server starts on http://localhost:3001
 ```
 
@@ -58,6 +60,8 @@ Open `http://localhost:5173`, upload a CSV with these columns:
 | 2024-01-15 | Widget A | 1500.00 | 25 | North |
 
 Or download the sample CSV from the landing page.
+
+You can also open `http://localhost:3001` to use the dashboard directly through Django.
 
 ## Features
 
@@ -89,7 +93,7 @@ cp .env.example .env
 ## Tech Stack
 
 - **Frontend**: Vanilla HTML/CSS/JS, Chart.js, Tailwind (CDN), Font Awesome
-- **Backend**: Python 3.8+, Flask, Flask-CORS
+- **Backend**: Django 5.2 LTS, Python 3.10–3.14
 - **AI**: Groq API (GPT-OSS 20B) via OpenAI-compatible client
 - **Dev Server**: Vite (proxy + hot reload)
 
@@ -97,11 +101,15 @@ cp .env.example .env
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `3001` | Backend server port |
-| `APP_ENV` | `development` | `production` disables debug mode |
+| `PORT` | `3001` | Port used by the documented Gunicorn command |
+| `APP_ENV` | `production` | Set to `development` for local Django debug pages |
 | `LOG_LEVEL` | `INFO` | Logging verbosity |
+| `DJANGO_ALLOWED_HOSTS` | Localhost and the managed Render hostname, when present | Add comma-separated hostnames for other domains or local network access |
+| `DJANGO_SECRET_KEY` | Random per process | Set a stable secret in production |
 | `GROQ_API_KEY` | — | Required for AI chat feature |
 | `GROQ_MODEL` | `openai/gpt-oss-20b` | Groq chat model |
+
+Production startup and backend tests are documented in the [backend README](artifacts/api-server-python/README.md).
 
 ## License
 

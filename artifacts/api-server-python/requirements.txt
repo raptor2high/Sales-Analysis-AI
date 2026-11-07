@@ -1,5 +1,5 @@
-Flask==3.0.0
-Flask-CORS==4.0.0
+Django>=5.2.8,<5.3
+django-cors-headers>=4.7,<5
 gunicorn==21.2.0
 openai>=1.0.0
 python-dotenv>=1.0.0

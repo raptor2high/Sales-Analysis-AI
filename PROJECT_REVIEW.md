@@ -2,7 +2,7 @@
 
 ## Scope and architecture
 
-Reviewed the tracked backend, frontend, configuration, dependency manifests, sample CSV, and existing tests. Flask serves the single dashboard and public assets; Vite proxies API requests during development. The Python engine parses orders, sorts them chronologically, aggregates KPIs and charts, and generates rule-based insights and forecasts. Chat sends the resulting analysis and recent conversation to Groq. This refactor keeps endpoint paths, response fields, UI IDs, chart configuration, Groq settings, and analysis formulas intact for valid uploads.
+Reviewed the tracked backend, frontend, configuration, dependency manifests, sample CSV, and existing tests. The Python backend serves the single dashboard and public assets; Vite proxies API requests during development. The Python engine parses orders, sorts them chronologically, aggregates KPIs and charts, and generates rule-based insights and forecasts. Chat sends the resulting analysis and recent conversation to Groq. This refactor keeps endpoint paths, response fields, UI IDs, chart configuration, Groq settings, and analysis formulas intact for valid uploads.
 
 ## Changes
 
@@ -10,7 +10,7 @@ Reviewed the tracked backend, frontend, configuration, dependency manifests, sam
 - A per-upload date cache holds at most 4,096 date strings, eliminating repeated parsing for common sales dates without retaining customer data across uploads.
 - Growth calculations use indexed iteration instead of allocating quarter-sized list slices. Daily average calculation consumes dictionary values directly instead of allocating another list.
 - UTF-8 BOM files now work. Invalid UTF-8 returns a client error; rows with extra CSV fields are skipped with warnings rather than crashing the entire upload. Non-finite numeric results are rejected.
-- The dashboard JavaScript is in public/app.js, shared by Flask and Vite without a module conversion. Existing inline button handlers continue to resolve global functions.
+- The dashboard JavaScript is in public/app.js, shared by the backend and Vite without a module conversion. Existing inline button handlers continue to resolve global functions.
 - New uploads abort previous browser requests and ignore late responses, preventing old analysis from replacing a newer dataset. Aborting browser fetch does not guarantee cancellation of server-side work already underway.
 - Escaped data-derived insights, recommendations, and validation errors before inserting HTML. Uploaded names and bad CSV values render as text while preserving the existing layouts.
 - Removed unused pandas and numpy requirements. The engine uses standard-library collections and dataclasses. Kept the existing React/frontend dependency configuration to avoid an unrelated lockfile migration.
@@ -34,7 +34,7 @@ One local synthetic 20,000-row repeated-date run measured 0.313s before versus 0
 Commands after installing requirements and frontend dependencies:
 
 ```text
-python -m unittest discover -s artifacts/api-server-python -p "test_*.py"
+python artifacts/api-server-python/manage.py test artifacts/api-server-python
 node --test artifacts/sales-ai/test_workflow.cjs
 pnpm build
 pnpm typecheck
@@ -47,5 +47,5 @@ pnpm typecheck
 - Orders mean CSV rows, not summed quantity. Growth compares recent row quarters, not calendar quarters.
 - Some generated recommendations imply ROI or causes unsupported by the CSV columns. A separate content/calculation change should address those claims.
 - Large uploads, large product breakdowns, chat context size, and browser message history are not globally bounded. Explicit service limits or server-held analysis sessions would require defining product limits and deployment storage behavior.
-- Flask's static fallback returns index.html for missing assets/unknown GET routes. CDN-loaded UI libraries/fonts remain external dependencies.
+- The backend's static fallback returns index.html for missing assets/unknown GET routes. CDN-loaded UI libraries/fonts remain external dependencies.
 - Chat sees aggregates, not raw rows; changing model alone does not add granular querying. The API key remains an environment secret, outside the tracked repository.
